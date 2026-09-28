@@ -143,10 +143,20 @@
       }).join('') + '</ol>';
     }
 
-    // Today's plan by local date; before the trip -> first day, after -> last day.
-    var pick = 0;
-    dni.forEach(function (d, i) { if (d.data <= today) pick = i; });
+    // A day-specific link (#piatek, #sobota — from per-day QR codes) wins;
+    // otherwise today's plan by local date: before the trip -> first day, after -> last day.
+    var hash = slug(decodeURIComponent(location.hash.slice(1)));
+    var pick = -1;
+    dni.forEach(function (d, i) { if (slug(d.nazwa) === hash) pick = i; });
+    if (pick < 0) {
+      pick = 0;
+      dni.forEach(function (d, i) { if (d.data <= today) pick = i; });
+    }
     show(pick);
+  }
+
+  function slug(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l');
   }
 </script>
 </body>
