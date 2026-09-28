@@ -1,0 +1,26 @@
+{
+  "tytul": "PSP5",
+  "dni": [
+    {
+      "nazwa": "Piątek",
+      "data": "2026-10-09",
+      "tlo": "tlo-1.jpg",
+      "punkty": [
+        { "godzina": "16:00", "co": "Przyjazd i zakwaterowanie", "gdzie": "" },
+        { "godzina": "19:00", "co": "Kolacja", "gdzie": "" },
+        { "godzina": "21:00", "co": "Wieczór integracyjny", "gdzie": "" }
+      ]
+    },
+    {
+      "nazwa": "Sobota",
+      "data": "2026-10-10",
+      "tlo": "tlo-2.jpg",
+      "punkty": [
+        { "godzina": "09:00", "co": "Śniadanie", "gdzie": "" },
+        { "godzina": "10:30", "co": "Atrakcja dnia", "gdzie": "" },
+        { "godzina": "14:00", "co": "Obiad", "gdzie": "" },
+        { "godzina": "19:00", "co": "Kolacja", "gdzie": "" }
+      ]
+    }
+  ]
+}

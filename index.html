@@ -5,128 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1a0f0a">
 <title>PSP5 — plan dnia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #1a0f0a;
-    --panel: #2a1810;
+    --panel: rgba(26, 15, 10, .82);
     --rust: #c4501e;
     --sand: #e8c48a;
-    --muted: #9c7b5a;
+    --muted: #b8966e;
+    --display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--sand); }
+  html, body { margin: 0; color: var(--sand); background: var(--bg); }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  }
+  /* Background art sits behind everything; the gradient keeps text legible on any image. */
+  #bg {
+    position: fixed; inset: 0; z-index: -1;
+    background: var(--bg) center / cover no-repeat;
+  }
+  #bg::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(26,15,10,.55), rgba(26,15,10,.35) 40%, rgba(26,15,10,.75));
   }
   header {
     position: sticky; top: 0; z-index: 1;
-    background: var(--bg);
     padding: 12px 16px 10px;
+    background: rgba(26, 15, 10, .9);
     border-bottom: 2px solid var(--rust);
   }
   h1 {
-    margin: 0 0 10px;
-    font-size: 1.1rem;
+    margin: 0 0 8px;
+    font: 400 1.6rem/1 var(--display);
     letter-spacing: .12em;
-    text-transform: uppercase;
     color: var(--rust);
   }
   nav { display: flex; gap: 8px; }
   nav button {
     flex: 1;
-    padding: 12px 8px;
-    font: inherit;
-    font-weight: 700;
-    font-size: 1rem;
+    padding: 10px 8px;
+    font: 400 1.35rem/1.1 var(--display);
+    letter-spacing: .06em;
     color: var(--sand);
-    background: var(--panel);
+    background: rgba(42, 24, 16, .9);
     border: 2px solid var(--muted);
     border-radius: 6px;
     cursor: pointer;
   }
-  nav button[aria-selected="true"] {
-    background: var(--rust);
-    border-color: var(--rust);
-    color: #fff;
-  }
-  nav button small { display: block; font-weight: 400; opacity: .85; }
-  main { flex: 1; padding: 12px 16px 24px; }
-  .day { display: none; }
-  .day.active { display: block; }
-  .day a { display: block; }
-  .day img {
-    display: block;
-    width: 100%;
-    max-width: 720px;
-    margin: 0 auto;
+  nav button[aria-selected="true"] { background: var(--rust); border-color: var(--rust); color: #fff; }
+  nav button small { display: block; font: 400 .85rem/1.3 system-ui, sans-serif; letter-spacing: 0; opacity: .85; }
+  main { padding: 16px 16px 32px; max-width: 640px; margin: 0 auto; }
+  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  li {
+    display: grid;
+    grid-template-columns: 5.2rem 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--panel);
+    border-left: 4px solid var(--muted);
     border-radius: 6px;
   }
-  .placeholder {
-    display: none;
-    text-align: center;
-    padding: 64px 16px;
-    border: 2px dashed var(--muted);
-    border-radius: 6px;
-    color: var(--muted);
-    font-size: 1.2rem;
+  li.past { opacity: .5; }
+  li.now { border-left-color: var(--rust); outline: 2px solid var(--rust); }
+  .time { font: 400 2rem/1 var(--display); color: var(--rust); letter-spacing: .04em; }
+  .what { font-size: 1.15rem; font-weight: 700; line-height: 1.25; }
+  .where { font-size: .9rem; color: var(--muted); margin-top: 2px; }
+  .tag {
+    display: inline-block; margin-left: 6px; padding: 1px 6px;
+    font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    background: var(--rust); color: #fff; border-radius: 3px; vertical-align: middle;
   }
-  .missing img, .missing a { display: none; }
-  .missing .placeholder { display: block; }
-  .hint { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 10px; }
-  .missing .hint { display: none; }
+  .empty { text-align: center; padding: 48px 16px; background: var(--panel); border-radius: 6px; color: var(--muted); font-size: 1.2rem; }
 </style>
 </head>
 <body>
+<div id="bg"></div>
 <header>
-  <h1>PSP5 · Plan dnia</h1>
-  <nav role="tablist">
-    <button role="tab" data-day="1" data-date="2026-10-09">Piątek<small>9.10</small></button>
-    <button role="tab" data-day="2" data-date="2026-10-10">Sobota<small>10.10</small></button>
-  </nav>
+  <h1 id="title">PSP5 · Plan dnia</h1>
+  <nav role="tablist" id="tabs"></nav>
 </header>
-<main>
-  <section class="day" id="day-1">
-    <a href="dzien-1.png"><img alt="Plan na piątek 9.10" data-src="dzien-1.png"></a>
-    <p class="hint">Stuknij grafikę, żeby ją powiększyć</p>
-    <div class="placeholder">Plan na piątek wkrótce</div>
-  </section>
-  <section class="day" id="day-2">
-    <a href="dzien-2.png"><img alt="Plan na sobotę 10.10" data-src="dzien-2.png"></a>
-    <p class="hint">Stuknij grafikę, żeby ją powiększyć</p>
-    <div class="placeholder">Plan na sobotę wkrótce</div>
-  </section>
-</main>
+<main id="plan"><div class="empty">Ładowanie planu…</div></main>
 <script>
-  // Bust phone/CDN caches so a swapped image shows up without renaming files.
-  var v = Date.now();
-  document.querySelectorAll('.day img').forEach(function (img) {
-    var section = img.closest('.day');
-    img.onerror = function () { section.classList.add('missing'); };
-    img.src = img.dataset.src + '?v=' + v;
-    img.parentNode.href = img.src;
-  });
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-  var tabs = document.querySelectorAll('nav button');
-  function show(day) {
-    tabs.forEach(function (t) {
-      var on = t.dataset.day === day;
-      t.setAttribute('aria-selected', on);
-      document.getElementById('day-' + t.dataset.day).classList.toggle('active', on);
+  var now = new Date();
+  var today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  var clock = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  var v = Date.now(); // cache-bust so edits to plan.json / backgrounds show up immediately
+
+  fetch('plan.json?v=' + v)
+    .then(function (r) { return r.json(); })
+    .then(render)
+    .catch(function () {
+      document.getElementById('plan').innerHTML = '<div class="empty">Nie udało się wczytać planu. Odśwież stronę.</div>';
     });
-  }
-  tabs.forEach(function (t) {
-    t.addEventListener('click', function () { show(t.dataset.day); });
-  });
 
-  // Today's plan by local date; before the trip -> first day, after -> last day.
-  var d = new Date();
-  var today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  var pick = tabs[0].dataset.day;
-  tabs.forEach(function (t) { if (t.dataset.date <= today) pick = t.dataset.day; });
-  show(pick);
+  function render(plan) {
+    document.getElementById('title').textContent = (plan.tytul || 'PSP5') + ' · Plan dnia';
+    var tabs = document.getElementById('tabs');
+    var dni = plan.dni || [];
+
+    dni.forEach(function (dzien, i) {
+      var b = document.createElement('button');
+      b.setAttribute('role', 'tab');
+      var dt = dzien.data.split('-');
+      b.innerHTML = esc(dzien.nazwa) + '<small>' + (+dt[2]) + '.' + dt[1] + '</small>';
+      b.addEventListener('click', function () { show(i); });
+      tabs.appendChild(b);
+    });
+
+    function show(i) {
+      var dzien = dni[i];
+      Array.prototype.forEach.call(tabs.children, function (b, j) { b.setAttribute('aria-selected', i === j); });
+      document.getElementById('bg').style.backgroundImage = dzien.tlo ? 'url("' + dzien.tlo + '?v=' + v + '")' : '';
+
+      var punkty = (dzien.punkty || []).slice().sort(function (a, b) { return a.godzina < b.godzina ? -1 : 1; });
+      if (!punkty.length) {
+        document.getElementById('plan').innerHTML = '<div class="empty">Plan na ' + esc(dzien.nazwa).toLowerCase() + ' wkrótce</div>';
+        return;
+      }
+      // On the day itself: dim finished items, mark the one in progress as "teraz".
+      var isToday = dzien.data === today;
+      var current = -1;
+      if (isToday) punkty.forEach(function (p, k) { if (p.godzina <= clock) current = k; });
+
+      document.getElementById('plan').innerHTML = '<ol>' + punkty.map(function (p, k) {
+        var cls = !isToday ? '' : k < current ? 'past' : k === current ? 'now' : '';
+        return '<li class="' + cls + '"><span class="time">' + esc(p.godzina) + '</span><div>' +
+          '<div class="what">' + esc(p.co) + (cls === 'now' ? '<span class="tag">teraz</span>' : '') + '</div>' +
+          (p.gdzie ? '<div class="where">' + esc(p.gdzie) + '</div>' : '') + '</div></li>';
+      }).join('') + '</ol>';
+    }
+
+    // Today's plan by local date; before the trip -> first day, after -> last day.
+    var pick = 0;
+    dni.forEach(function (d, i) { if (d.data <= today) pick = i; });
+    show(pick);
+  }
 </script>
 </body>
 </html>
