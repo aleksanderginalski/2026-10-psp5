@@ -155,6 +155,9 @@
     show(pick);
   }
 
+  // Scanning the other day's QR in an already-open tab only changes the hash.
+  window.addEventListener('hashchange', function () { location.reload(); });
+
   function slug(s) {
     return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l');
   }
