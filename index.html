@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1a0f0a">
+<title>PSP5 — plan dnia</title>
+<style>
+  :root {
+    --bg: #1a0f0a;
+    --panel: #2a1810;
+    --rust: #c4501e;
+    --sand: #e8c48a;
+    --muted: #9c7b5a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--sand); }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    position: sticky; top: 0; z-index: 1;
+    background: var(--bg);
+    padding: 12px 16px 10px;
+    border-bottom: 2px solid var(--rust);
+  }
+  h1 {
+    margin: 0 0 10px;
+    font-size: 1.1rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--rust);
+  }
+  nav { display: flex; gap: 8px; }
+  nav button {
+    flex: 1;
+    padding: 12px 8px;
+    font: inherit;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--sand);
+    background: var(--panel);
+    border: 2px solid var(--muted);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  nav button[aria-selected="true"] {
+    background: var(--rust);
+    border-color: var(--rust);
+    color: #fff;
+  }
+  nav button small { display: block; font-weight: 400; opacity: .85; }
+  main { flex: 1; padding: 12px 16px 24px; }
+  .day { display: none; }
+  .day.active { display: block; }
+  .day a { display: block; }
+  .day img {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    border-radius: 6px;
+  }
+  .placeholder {
+    display: none;
+    text-align: center;
+    padding: 64px 16px;
+    border: 2px dashed var(--muted);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 1.2rem;
+  }
+  .missing img, .missing a { display: none; }
+  .missing .placeholder { display: block; }
+  .hint { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 10px; }
+  .missing .hint { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PSP5 · Plan dnia</h1>
+  <nav role="tablist">
+    <button role="tab" data-day="1" data-date="2026-10-09">Piątek<small>9.10</small></button>
+    <button role="tab" data-day="2" data-date="2026-10-10">Sobota<small>10.10</small></button>
+  </nav>
+</header>
+<main>
+  <section class="day" id="day-1">
+    <a href="dzien-1.png"><img alt="Plan na piątek 9.10" data-src="dzien-1.png"></a>
+    <p class="hint">Stuknij grafikę, żeby ją powiększyć</p>
+    <div class="placeholder">Plan na piątek wkrótce</div>
+  </section>
+  <section class="day" id="day-2">
+    <a href="dzien-2.png"><img alt="Plan na sobotę 10.10" data-src="dzien-2.png"></a>
+    <p class="hint">Stuknij grafikę, żeby ją powiększyć</p>
+    <div class="placeholder">Plan na sobotę wkrótce</div>
+  </section>
+</main>
+<script>
+  // Bust phone/CDN caches so a swapped image shows up without renaming files.
+  var v = Date.now();
+  document.querySelectorAll('.day img').forEach(function (img) {
+    var section = img.closest('.day');
+    img.onerror = function () { section.classList.add('missing'); };
+    img.src = img.dataset.src + '?v=' + v;
+    img.parentNode.href = img.src;
+  });
+
+  var tabs = document.querySelectorAll('nav button');
+  function show(day) {
+    tabs.forEach(function (t) {
+      var on = t.dataset.day === day;
+      t.setAttribute('aria-selected', on);
+      document.getElementById('day-' + t.dataset.day).classList.toggle('active', on);
+    });
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { show(t.dataset.day); });
+  });
+
+  // Today's plan by local date; before the trip -> first day, after -> last day.
+  var d = new Date();
+  var today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  var pick = tabs[0].dataset.day;
+  tabs.forEach(function (t) { if (t.dataset.date <= today) pick = t.dataset.day; });
+  show(pick);
+</script>
+</body>
+</html>
