@@ -15,7 +15,19 @@
     --rust: #c4501e;
     --sand: #e8c48a;
     --muted: #b8966e;
+    --shade: 26, 15, 10;
+    --btn: rgba(42, 24, 16, .9);
     --display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  }
+  /* Per-day palette, picked by "motyw" in plan.json. Default above = "pustkowie" (rust). */
+  :root[data-motyw="noc"] {
+    --bg: #0d1320;
+    --panel: rgba(13, 19, 32, .82);
+    --rust: #f39a1e;
+    --sand: #efe4cf;
+    --muted: #8c9cb5;
+    --shade: 13, 19, 32;
+    --btn: rgba(22, 32, 52, .9);
   }
   * { box-sizing: border-box; }
   html { background: var(--bg); }
@@ -32,7 +44,7 @@
   }
   #bg::after {
     content: ""; position: absolute; inset: 0;
-    background: linear-gradient(to bottom, rgba(26,15,10,.15), rgba(26,15,10,.3) 50%, rgba(26,15,10,.15));
+    background: linear-gradient(to bottom, rgba(var(--shade), .15), rgba(var(--shade), .3) 50%, rgba(var(--shade), .15));
   }
   header {
     position: sticky; top: 0; z-index: 1;
@@ -53,12 +65,12 @@
     font: 400 1.35rem/1.1 var(--display);
     letter-spacing: .06em;
     color: var(--sand);
-    background: rgba(42, 24, 16, .9);
+    background: var(--btn);
     border: 2px solid var(--muted);
     border-radius: 6px;
     cursor: pointer;
   }
-  nav button[aria-selected="true"] { background: var(--rust); border-color: var(--rust); color: #fff; }
+  nav button[aria-selected="true"] { background: var(--rust); border-color: var(--rust); color: var(--bg); }
   nav button small { display: block; font: 400 .85rem/1.3 system-ui, sans-serif; letter-spacing: 0; opacity: .85; }
   /* Leave the top of the artwork (the scene) visible above the list. */
   main { padding: max(16px, 16vh) 16px 32px; max-width: 640px; margin: 0 auto; }
@@ -129,6 +141,8 @@
     function show(i) {
       var dzien = dni[i];
       Array.prototype.forEach.call(tabs.children, function (b, j) { b.setAttribute('aria-selected', i === j); });
+      document.documentElement.dataset.motyw = dzien.motyw || '';
+      document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
       document.getElementById('bg').style.backgroundImage = dzien.tlo ? 'url("' + dzien.tlo + '?v=' + v + '")' : '';
 
       var punkty = (dzien.punkty || []).slice().sort(function (a, b) { return a.godzina < b.godzina ? -1 : 1; });
