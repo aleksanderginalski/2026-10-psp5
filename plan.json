@@ -7,9 +7,14 @@
       "tlo": "tlo-piatek.jpg",
       "motyw": "noc",
       "punkty": [
-        { "godzina": "16:00", "co": "Przyjazd i zakwaterowanie", "gdzie": "" },
-        { "godzina": "19:00", "co": "Kolacja", "gdzie": "" },
-        { "godzina": "21:00", "co": "Wieczór integracyjny", "gdzie": "" }
+        { "godzina": "12:00", "co": "Fura, bit i w drogę", "gdzie": "" },
+        { "godzina": "14:00", "co": "Rozkładamy się na kwadracie", "gdzie": "" },
+        { "godzina": "15:00", "co": "Chill na ławce", "gdzie": "" },
+        { "godzina": "17:00", "co": "Michy dla reszty ekipy", "gdzie": "" },
+        { "godzina": "19:00", "co": "Rozgrzewka gardeł", "gdzie": "" },
+        { "godzina": "21:30", "co": "Fit check, mordo", "gdzie": "" },
+        { "godzina": "22:00", "co": "Nawijka na śmierć i życie", "gdzie": "" },
+        { "godzina": "24:00", "co": "Flaszka, bit i dym", "gdzie": "" }
       ]
     },
     {
@@ -18,10 +23,16 @@
       "tlo": "tlo-sobota.jpg",
       "motyw": "pustkowie",
       "punkty": [
-        { "godzina": "09:00", "co": "Śniadanie", "gdzie": "" },
-        { "godzina": "10:30", "co": "Atrakcja dnia", "gdzie": "" },
-        { "godzina": "14:00", "co": "Obiad", "gdzie": "" },
-        { "godzina": "19:00", "co": "Kolacja", "gdzie": "" }
+        { "godzina": "09:00", "co": "Dzień po bombie", "gdzie": "" },
+        { "godzina": "10:00", "co": "Wydawanie racji", "gdzie": "" },
+        { "godzina": "11:00", "co": "Mapy Pustkowia", "gdzie": "" },
+        { "godzina": "13:00", "co": "Ucieczka rzeką", "gdzie": "" },
+        { "godzina": "16:00", "co": "Łowy na Pustkowiu", "gdzie": "" },
+        { "godzina": "18:00", "co": "Wieczerza w Cytadeli", "gdzie": "" },
+        { "godzina": "19:00", "co": "Łachy z Pustkowia", "gdzie": "" },
+        { "godzina": "19:30", "co": "Język Pustkowia", "gdzie": "" },
+        { "godzina": "20:00", "co": "Turniej o wodę", "gdzie": "" },
+        { "godzina": "22:00", "co": "Skażenie do świtu", "gdzie": "" }
       ]
     }
   ]
