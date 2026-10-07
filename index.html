@@ -91,7 +91,7 @@
   /* The only scrolling part; its edges fade so items slide out softly under the tabs and above the scene. */
   main {
     flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-    width: 100%; max-width: 640px; margin: 0 auto; padding: 10px 16px 14px;
+    width: 100%; max-width: 640px; margin: 0 auto; padding: 10px 16px calc(14px + var(--lip, 0px));   /* --lip: what of the scene's frame sticks up over the plan (scena.js) */
     -webkit-mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - 14px), transparent);
     mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - 14px), transparent);
   }
@@ -129,6 +129,17 @@
     border: 2px solid var(--rust); border-radius: 6px;
     image-rendering: crisp-edges; image-rendering: pixelated;
   }
+  /* Optional DALL-E frame around the scene ("ramka" in scena.json, sized by scena.js): the canvas fills the
+     frame's window (letterboxed on a dark screen if the window is taller), the frame is drawn over it, and
+     whatever sticks out on top (antennas, spikes) overlaps the plan without catching its taps. */
+  #ramka { position: relative; margin: 0 auto; pointer-events: none; }
+  #ramka img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  #ramka img[hidden] { display: none; }
+  #scena.framed { padding: 0 4px calc(4px + env(safe-area-inset-bottom)); }
+  #scena.framed canvas {
+    position: absolute; margin: 0; border: 0; border-radius: 0; background: #05070c;
+    object-fit: contain; pointer-events: auto;
+  }
 </style>
 </head>
 <body>
@@ -138,7 +149,7 @@
 </header>
 <nav role="tablist" id="tabs"></nav>
 <main id="plan"><div class="empty">Ładowanie planu…</div></main>
-<footer id="scena" hidden><canvas aria-hidden="true"></canvas></footer>
+<footer id="scena" hidden><div id="ramka"><canvas aria-hidden="true"></canvas><img alt="" hidden></div></footer>
 <script>
   function fitBg() { document.getElementById('bg').style.top = document.querySelector('header').offsetHeight + 'px'; }
   window.addEventListener('resize', fitBg);

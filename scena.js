@@ -45,11 +45,28 @@
     if (!ready) { if (!loading) load(pick[0]); return; }
     var s = pick[1]({ meta: meta, img: img });
     W = s.w; H = s.h; cv.width = W; cv.height = H;
+    var fr = meta[pick[0]].ramka, wrap = cv.parentNode, pic = wrap.querySelector('img');
+    box.classList.toggle('framed', !!fr);              // before measuring: the padding changes
+    document.documentElement.style.setProperty('--lip', '0px');
     var cs = getComputedStyle(box);
     var room = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    // as wide as the screen, but never taller than ~30% of it (phone in landscape, desktop)
-    var inner = Math.floor(Math.min(room, 480, window.innerHeight * 0.3 * W / H)) - 4;
-    cv.style.width = inner + 'px'; cv.style.height = Math.round(inner * H / W) + 'px';
+    if (fr) {
+      // the frame as wide as the screen, its body (below what sticks out on top) under ~1/3 of its height;
+      // the canvas fills the frame's window
+      var k = Math.min(Math.min(room, 600) / fr.w, window.innerHeight * 0.34 / (fr.h - fr.lip));
+      wrap.style.cssText = 'width:' + fr.w * k + 'px;height:' + fr.h * k + 'px;margin-top:' + -fr.lip * k + 'px';
+      document.documentElement.style.setProperty('--lip', fr.lip * k + 'px');   // the plan scrolls clear of it
+      cv.style.cssText = 'left:' + fr.win[0] * k + 'px;top:' + fr.win[1] * k + 'px;width:' + fr.win[2] * k + 'px;height:' + fr.win[3] * k + 'px';
+      var src = 'scena/' + fr.src + '?v=' + V;
+      if (pic.getAttribute('src') !== src) pic.src = src;
+      pic.hidden = false;
+    } else {
+      // as wide as the screen, but never taller than ~30% of it (phone in landscape, desktop)
+      var inner = Math.floor(Math.min(room, 480, window.innerHeight * 0.3 * W / H)) - 4;
+      wrap.style.cssText = '';
+      cv.style.cssText = 'width:' + inner + 'px;height:' + Math.round(inner * H / W) + 'px';
+      pic.hidden = true;
+    }
     width = box.clientWidth;
     scene = s;
     for (var i = 0; i < preroll * 60; i++) { scene.update(1 / 60, hype); scene.draw(ctx, hype); }
@@ -74,8 +91,8 @@
   box.addEventListener('pointerdown', function (e) {
     if (!scene) return;
     if (isNaN(frozen)) hype = Math.min(1, hype + 0.12);
-    var r = cv.getBoundingClientRect();
-    scene.tap((e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H);
+    var r = cv.getBoundingClientRect(), k = Math.min(r.width / W, r.height / H);   // the scene may be letterboxed
+    scene.tap((e.clientX - r.left - (r.width - W * k) / 2) / k, (e.clientY - r.top - (r.height - H * k) / 2) / k);
     if (navigator.vibrate) navigator.vibrate(8);
   });
   var io = new IntersectionObserver(function (e) { visible = e[e.length - 1].isIntersecting; loop(); });
@@ -202,8 +219,9 @@
     ring.forEach(function (o) { text(g, s, x + o[0], y + o[1], [20, 10, 8], k); });
     text(g, s, x, y, col, k);
   }
-  // Left edge for text centred on cx that never runs off a scene W wide (long shouts near the sides).
-  function fit(cx, w, W) { return Math.max(3, Math.min(W - 3 - w, Math.round(cx - w / 2))); }
+  // Left edge for text centred on cx that stays clear of the scene's edges (long shouts near the sides,
+  // and a frame around the scene covers a few pixels of it).
+  function fit(cx, w, W) { return Math.max(9, Math.min(W - 9 - w, Math.round(cx - w / 2))); }
 
   // ---------- Friday: rap battle at night ----------
   // Two MCs under a spotlight that follows whoever has the mic; turns switch every 8 beats.
