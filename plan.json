@@ -5,6 +5,7 @@
       "nazwa": "Piątek",
       "data": "2026-10-09",
       "tlo": "tlo-piatek.jpg",
+      "logo": "logo-piatek.webp",
       "motyw": "noc",
       "punkty": [
         { "godzina": "12:00", "co": "Fura, bit i w drogę", "gdzie": "" },
@@ -21,6 +22,7 @@
       "nazwa": "Sobota",
       "data": "2026-10-10",
       "tlo": "tlo-sobota.jpg",
+      "logo": "logo-sobota.webp",
       "motyw": "pustkowie",
       "punkty": [
         { "godzina": "09:00", "co": "Dzień po bombie", "gdzie": "" },

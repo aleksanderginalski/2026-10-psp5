@@ -40,7 +40,6 @@
       box.hidden = !ready;
       io.unobserve(box); io.observe(box);
     }
-    if (!ready) document.documentElement.style.setProperty('--scena-h', '0px');
     if (!pick) return;
     if (!ready) { if (!loading) load(pick[0]); return; }
     var s = pick[1]({ meta: meta, img: img });
@@ -51,7 +50,6 @@
     var inner = Math.floor(Math.min(room, 480, window.innerHeight * 0.3 * W / H)) - 4;
     cv.style.width = inner + 'px'; cv.style.height = Math.round(inner * H / W) + 'px';
     width = box.clientWidth;
-    document.documentElement.style.setProperty('--scena-h', box.offsetHeight + 'px');   // room for the plan to scroll clear
     scene = s;
     for (var i = 0; i < preroll * 60; i++) { scene.update(1 / 60, hype); scene.draw(ctx, hype); }
     scene.update(0, hype); scene.draw(ctx, hype);
