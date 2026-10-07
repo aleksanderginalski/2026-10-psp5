@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1a0f0a">
-<title>PSP5 — plan dnia</title>
+<title>Gejowski Gambit 2026 — plan dnia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -48,32 +48,38 @@
   }
   header {
     position: sticky; top: 0; z-index: 1;
-    padding: 12px 16px 10px;
+    padding: 12px 16px 8px;
     background: var(--bg);
-    border-bottom: 2px solid var(--rust);
+  }
+  /* No hard edge under the header: it fades into the artwork. */
+  header::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 18px; pointer-events: none;
+    background: linear-gradient(var(--bg), rgba(var(--shade), 0));
   }
   h1 {
-    margin: 0 0 8px;
-    font: 400 1.6rem/1 var(--display);
+    margin: 0;
+    font: 400 1.75rem/1 var(--display);
     letter-spacing: .12em;
     color: var(--rust);
+    text-align: center;
   }
-  nav { display: flex; gap: 8px; }
+  /* Day tabs sit on the artwork, just above the list. */
+  nav { display: flex; gap: 8px; margin-bottom: 12px; }
   nav button {
     flex: 1;
-    padding: 10px 8px;
-    font: 400 1.35rem/1.1 var(--display);
+    padding: 5px 8px;
+    font: 400 1.2rem/1.1 var(--display);
     letter-spacing: .06em;
     color: var(--sand);
-    background: var(--btn);
+    background: rgba(var(--shade), .78);
     border: 2px solid var(--muted);
     border-radius: 6px;
     cursor: pointer;
   }
   nav button[aria-selected="true"] { background: var(--rust); border-color: var(--rust); color: var(--bg); }
-  nav button small { display: block; font: 400 .85rem/1.3 system-ui, sans-serif; letter-spacing: 0; opacity: .85; }
+  nav button small { margin-left: 6px; font: 400 .8rem/1 system-ui, sans-serif; letter-spacing: 0; opacity: .85; }
   /* Leave the top of the artwork (the scene) visible above the list. */
-  main { padding: max(16px, 16vh) 16px 32px; max-width: 640px; margin: 0 auto; }
+  main { padding: max(16px, 16vh) 16px calc(32px + var(--scena-h, 0px)); max-width: 640px; margin: 0 auto; }
   ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
   li {
     display: grid;
@@ -96,9 +102,12 @@
     background: var(--rust); color: #fff; border-radius: 3px; vertical-align: middle;
   }
   .empty { text-align: center; padding: 48px 16px; background: var(--panel); border-radius: 6px; color: var(--muted); font-size: 1.2rem; }
-  /* Tap-to-hype pixel scene under the plan (scena.js). manipulation = rapid taps don't zoom the page. */
+  /* Tap-to-hype pixel scene (scena.js), pinned to the bottom of the screen: the plan scrolls between the
+     header and the scene (main gets --scena-h of room at the bottom). manipulation = rapid taps don't zoom. */
   #scena {
-    max-width: 640px; margin: 0 auto; padding: 0 16px 24px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    background: var(--bg); border-top: 2px solid var(--rust);
     touch-action: manipulation; user-select: none; -webkit-user-select: none;
     -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; cursor: pointer;
   }
@@ -112,10 +121,12 @@
 <body>
 <div id="bg"></div>
 <header>
-  <h1 id="title">PSP5 · Plan dnia</h1>
-  <nav role="tablist" id="tabs"></nav>
+  <h1 id="title">Gejowski Gambit 2026</h1>
 </header>
-<main id="plan"><div class="empty">Ładowanie planu…</div></main>
+<main>
+  <nav role="tablist" id="tabs"></nav>
+  <div id="plan"><div class="empty">Ładowanie planu…</div></div>
+</main>
 <footer id="scena" hidden><canvas aria-hidden="true"></canvas></footer>
 <script>
   function fitBg() { document.getElementById('bg').style.top = document.querySelector('header').offsetHeight + 'px'; }
@@ -142,7 +153,7 @@
     });
 
   function render(plan) {
-    document.getElementById('title').textContent = (plan.tytul || 'PSP5') + ' · Plan dnia';
+    document.getElementById('title').textContent = plan.tytul || 'Gejowski Gambit 2026';
     var tabs = document.getElementById('tabs');
     var dni = plan.dni || [];
 

@@ -40,14 +40,18 @@
       box.hidden = !ready;
       io.unobserve(box); io.observe(box);
     }
+    if (!ready) document.documentElement.style.setProperty('--scena-h', '0px');
     if (!pick) return;
     if (!ready) { if (!loading) load(pick[0]); return; }
     var s = pick[1]({ meta: meta, img: img });
     W = s.w; H = s.h; cv.width = W; cv.height = H;
     var cs = getComputedStyle(box);
-    var inner = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 4;
+    var room = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    // as wide as the screen, but never taller than ~30% of it (phone in landscape, desktop)
+    var inner = Math.floor(Math.min(room, 480, window.innerHeight * 0.3 * W / H)) - 4;
     cv.style.width = inner + 'px'; cv.style.height = Math.round(inner * H / W) + 'px';
     width = box.clientWidth;
+    document.documentElement.style.setProperty('--scena-h', box.offsetHeight + 'px');   // room for the plan to scroll clear
     scene = s;
     for (var i = 0; i < preroll * 60; i++) { scene.update(1 / 60, hype); scene.draw(ctx, hype); }
     scene.update(0, hype); scene.draw(ctx, hype);
@@ -61,10 +65,11 @@
   }
   function frame(now) {
     if (!visible || !scene || document.hidden) { looping = false; return; }
+    requestAnimationFrame(frame);
+    if (hype < 0.05 && now - last < 30) return;     // nobody tapping: ~30 fps is plenty, the scene is always on screen
     var dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;   // rAF time can trail performance.now()
     if (isNaN(frozen)) hype *= Math.exp(-dt / 2);   // half-life ~1.4 s: you have to keep the fire going
     scene.update(dt, hype); scene.draw(ctx, hype);
-    requestAnimationFrame(frame);
   }
 
   box.addEventListener('pointerdown', function (e) {
