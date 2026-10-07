@@ -157,9 +157,12 @@
   function pad(n) { return String(n).padStart(2, '0'); }
   function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-  var now = new Date();
+  // The night belongs to the day before: the day changes at 6:00, so at 00:30 it is still Friday, "24:30",
+  // and the 24:00 item is "teraz" (the shouts in scena.js use the same rule).
+  var now = new Date(), late = now.getHours() < 6;
+  if (late) now.setDate(now.getDate() - 1);
   var today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
-  var clock = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  var clock = pad(now.getHours() + (late ? 24 : 0)) + ':' + pad(now.getMinutes());
   var v = Date.now(); // cache-bust so edits to plan.json / backgrounds show up immediately
 
   // The footer scene lives in its own file, so a bug there can't take the plan down.
@@ -216,11 +219,18 @@
           (p.gdzie ? '<div class="where">' + esc(p.gdzie) + '</div>' : '') + '</div></li>';
       }).join('') + '</ol>';
       // The list scrolls on its own: start at the top, or at what's on right now.
-      var list = document.getElementById('plan'), live = list.querySelector('li.now');
+      var list = document.getElementById('plan');
+      follow = list.querySelector('li.now');
       list.scrollTop = 0;
-      if (live) live.scrollIntoView({ block: 'center' });
+      if (follow) follow.scrollIntoView({ block: 'center' });
       fitBg();
     }
+
+    // What's on now stays in the middle while the list changes height (the scene below shows up a moment
+    // later, the phone turns) — until someone scrolls the list themselves.
+    var follow = null, list = document.getElementById('plan');
+    new ResizeObserver(function () { if (follow) follow.scrollIntoView({ block: 'center' }); }).observe(list);
+    ['pointerdown', 'wheel'].forEach(function (e) { list.addEventListener(e, function () { follow = null; }, { passive: true }); });
 
     // A day-specific link (#piatek, #sobota — from per-day QR codes) wins;
     // otherwise today's plan by local date: before the trip -> first day, after -> last day.
