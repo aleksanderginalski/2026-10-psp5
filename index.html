@@ -96,6 +96,17 @@
     background: var(--rust); color: #fff; border-radius: 3px; vertical-align: middle;
   }
   .empty { text-align: center; padding: 48px 16px; background: var(--panel); border-radius: 6px; color: var(--muted); font-size: 1.2rem; }
+  /* Tap-to-hype pixel scene under the plan (scena.js). manipulation = rapid taps don't zoom the page. */
+  #scena {
+    max-width: 640px; margin: 0 auto; padding: 0 16px 24px;
+    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+    -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; cursor: pointer;
+  }
+  #scena canvas {
+    display: block; margin: 0 auto; background: var(--bg);
+    border: 2px solid var(--rust); border-radius: 6px;
+    image-rendering: crisp-edges; image-rendering: pixelated;
+  }
 </style>
 </head>
 <body>
@@ -105,6 +116,7 @@
   <nav role="tablist" id="tabs"></nav>
 </header>
 <main id="plan"><div class="empty">Ładowanie planu…</div></main>
+<footer id="scena" hidden><canvas aria-hidden="true"></canvas></footer>
 <script>
   function fitBg() { document.getElementById('bg').style.top = document.querySelector('header').offsetHeight + 'px'; }
   window.addEventListener('resize', fitBg);
@@ -116,6 +128,11 @@
   var today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
   var clock = pad(now.getHours()) + ':' + pad(now.getMinutes());
   var v = Date.now(); // cache-bust so edits to plan.json / backgrounds show up immediately
+
+  // The footer scene lives in its own file, so a bug there can't take the plan down.
+  var sc = document.createElement('script');
+  sc.src = 'scena.js?v=' + v;
+  document.body.appendChild(sc);
 
   fetch('plan.json?v=' + v)
     .then(function (r) { return r.json(); })
