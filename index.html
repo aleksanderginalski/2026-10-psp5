@@ -180,6 +180,7 @@
     function show(i) {
       var dzien = dni[i];
       Array.prototype.forEach.call(tabs.children, function (b, j) { b.setAttribute('aria-selected', i === j); });
+      document.getElementById('scena').dzien = dzien;   // the footer scene draws its shouts from the shown day
       document.documentElement.dataset.motyw = dzien.motyw || '';
       document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
       document.getElementById('bg').style.backgroundImage = dzien.tlo ? 'url("' + dzien.tlo + '?v=' + v + '")' : '';

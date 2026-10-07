@@ -2,7 +2,8 @@
 // whole scene is a function of that one number. The art comes from DALL-E, cut into layers by
 // Scena/przygotuj.py (strona/scena/*.png + scena.json); this file moves the layers and adds light and
 // particles. The scene follows data-motyw on <html> (set by the day tabs); a day without a scene hides
-// the footer. Preview only: ?hype=0.5 freezes hype, ?t=4 pre-runs 4 s of animation.
+// the footer. The shouts come from the shown day in plan.json (index.html hands it over as box.dzien).
+// Preview only: ?hype=0.5 freezes hype, ?t=4 pre-runs 4 s of animation, ?teraz=20:00 sets the clock.
 (function () {
   var box = document.getElementById('scena');
   if (!box) return;
@@ -11,7 +12,7 @@
   var V = (/[?&]v=(\d+)/.exec(document.currentScript ? document.currentScript.src : '') || [])[1] || Date.now();
 
   var query = new URLSearchParams(location.search);
-  var frozen = parseFloat(query.get('hype')), preroll = parseFloat(query.get('t')) || 0;
+  var frozen = parseFloat(query.get('hype')), preroll = parseFloat(query.get('t')) || 0, fakeClock = query.get('teraz');
   var hype = isNaN(frozen) ? 0 : frozen;
   var meta = null, img = {}, loading = false, scene = null, W = 0, H = 0, width = 0, visible = false, looping = false, last = 0;
 
@@ -83,6 +84,30 @@
   new MutationObserver(setup).observe(document.documentElement, { attributes: true, attributeFilter: ['data-motyw'] });
   window.addEventListener('resize', function () { if (box.clientWidth !== width) setup(); });
 
+  // ---------- shouts ----------
+  // The day's own pool ("okrzyki"), and 1 in 4 from the pool of the item on right now. The night belongs
+  // to the day before: at 00:30 it is still Friday, "24:30", so the 24:00 item gets its turn.
+  var said = null;
+  function okrzyk() {
+    var d = box.dzien || {}, pool = d.okrzyki || [], now = teraz(d), on = null;
+    var punkty = now.day === d.data ? d.punkty || [] : [];
+    punkty.forEach(function (p) { if (p.godzina <= now.clock && (!on || p.godzina > on.godzina)) on = p; });
+    if (on && on.okrzyki && on.okrzyki.length && (!pool.length || Math.random() < 0.25)) pool = on.okrzyki;
+    if (!pool.length) return null;
+    var s = pool[Math.random() * pool.length | 0];
+    if (s === said && pool.length > 1) s = pool[(pool.indexOf(s) + 1) % pool.length];   // never twice in a row
+    return (said = s).toUpperCase();
+  }
+  function teraz(d) {
+    if (/^\d\d:\d\d$/.test(fakeClock || '')) return { day: d.data, clock: fakeClock };
+    var n = new Date(), late = n.getHours() < 6;
+    if (late) n.setDate(n.getDate() - 1);
+    return { day: n.getFullYear() + '-' + pad(n.getMonth() + 1) + '-' + pad(n.getDate()),
+      clock: pad(n.getHours() + (late ? 24 : 0)) + ':' + pad(n.getMinutes()) };
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function readTime(s) { return Math.max(1.1, 0.5 + s.length * 0.07); }   // long shouts stay up longer
+
   // ---------- pixel helpers ----------
 
   function rng(seed) {   // mulberry32: the same crowd on every load
@@ -133,7 +158,10 @@
     g.putImageData(img, 0, 0);
   }
 
-  // 5-row pixel font, variable width (M, N, W need more than 3 columns to read); only what the scenes use.
+  // 5-row pixel font, variable width (M, N, W need more than 3 columns to read): capitals, digits and the
+  // punctuation the shouts use. Polish letters are a base glyph plus an accent above or an ogonek below;
+  // they are \u escapes because they must match the characters in plan.json whatever the file is read as.
+  var MARK = { '\u0104': 'A_', '\u0106': 'C^', '\u0118': 'E_', '\u0143': 'N^', '\u00d3': 'O^', '\u015a': 'S^', '\u0179': 'Z^', '\u017b': 'Z^' };
   var GLYPH = {
     A: '010|101|111|101|101', B: '110|101|110|101|110', C: '011|100|100|100|011', D: '110|101|101|101|110',
     E: '111|100|110|100|111', G: '011|100|101|101|011', H: '101|101|111|101|101', I: '111|010|010|010|111',
@@ -141,9 +169,15 @@
     M: '10001|11011|10101|10001|10001', N: '1001|1101|1011|1001|1001', O: '010|101|101|101|010',
     P: '110|101|110|100|100', R: '110|101|110|101|101', S: '011|100|010|001|110', T: '111|010|010|010|010',
     U: '101|101|101|101|111', W: '10001|10001|10101|11011|10001', Y: '101|101|010|010|010',
-    Z: '111|001|010|100|111', '!': '1|1|1|0|1', ' ': '00|00|00|00|00', '♪': '011|010|010|110|110'
+    Z: '111|001|010|100|111', '!': '1|1|1|0|1', ' ': '00|00|00|00|00', '♪': '011|010|010|110|110',
+    F: '111|100|110|100|100', Q: '010|101|101|110|011', V: '101|101|101|101|010', X: '101|101|010|101|101',
+    '\u0141': '0100|0110|1100|0100|0111',
+    0: '111|101|101|101|111', 1: '010|110|010|010|111', 2: '110|001|010|100|111', 3: '110|001|010|001|110',
+    4: '101|101|111|001|001', 5: '111|100|110|001|110', 6: '011|100|110|101|010', 7: '111|001|010|010|010',
+    8: '010|101|010|101|010', 9: '010|101|011|001|110',
+    '?': '110|001|010|000|010', ',': '0|0|0|1|1', '.': '0|0|0|0|1', "'": '1|1|0|0|0', '-': '000|000|111|000|000'
   };
-  function glyph(ch) { return (GLYPH[ch === 'Ń' ? 'N' : ch] || GLYPH[' ']).split('|'); }
+  function glyph(ch) { return (GLYPH[MARK[ch] ? MARK[ch][0] : ch] || GLYPH[' ']).split('|'); }
   function textW(s, k) {
     var w = -1;
     for (var i = 0; i < s.length; i++) w += glyph(s[i])[0].length + 1;
@@ -156,16 +190,20 @@
       for (var ry = 0; ry < 5; ry++) for (var rx = 0; rx < rows[ry].length; rx++) {
         if (rows[ry][rx] === '1') g.fillRect(x + rx * k, y + ry * k, k, k);
       }
-      if (s[i] === 'Ń') g.fillRect(x + 2 * k, y - 2 * k, k, k);   // the accent
-      x += (rows[0].length + 1) * k;
+      var mark = MARK[s[i]] && MARK[s[i]][1], w = rows[0].length;
+      if (mark === '^') g.fillRect(x + (w >> 1) * k, y - 2 * k, k, k);   // the accent
+      if (mark === '_') g.fillRect(x + (w - 1) * k, y + 5 * k, k, k);    // the ogonek
+      x += (w + 1) * k;
     }
   }
-  // Text that reads over a busy picture: a 1px drop shadow, or a full outline for the big titles.
-  function say(g, s, x, y, col, k) {
-    var ring = k > 2 ? [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1]] : [[1, 1]];
+  // Text that reads over a busy picture: a 1px drop shadow, or a full outline for big titles and bright skies.
+  function say(g, s, x, y, col, k, outline) {
+    var ring = k > 2 || outline ? [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1]] : [[1, 1]];
     ring.forEach(function (o) { text(g, s, x + o[0], y + o[1], [20, 10, 8], k); });
     text(g, s, x, y, col, k);
   }
+  // Left edge for text centred on cx that never runs off a scene W wide (long shouts near the sides).
+  function fit(cx, w, W) { return Math.max(3, Math.min(W - 3 - w, Math.round(cx - w / 2))); }
 
   // ---------- Friday: rap battle at night ----------
   // Two MCs under a spotlight that follows whoever has the mic; turns switch every 8 beats.
@@ -176,7 +214,6 @@
     var R = rng(9);
     var CREAM = [239, 228, 207], RIM = [243, 154, 30], WARM = [255, 150, 60], SPOT = [255, 214, 160];
     var PHONE = [255, 236, 190], BLACK = [7, 10, 18];
-    var WORDS = ['YO', 'EJ', 'SKRR', 'HA!', 'TAK!', 'JAZDA'];
 
     var mcs = ['l', 'p'].map(function (k) {
       var m = M.mcs[k];
@@ -205,9 +242,9 @@
       speak -= dt;
       if (h > 0.12 && speak <= 0) {
         speak = 1.6 - 0.9 * h;
-        var mouth = m.mouths[m.frame] || m.mouths[0];
-        parts.push({ s: WORDS[Math.random() * WORDS.length | 0], x: m.x + mouth[0] + m.face * 10, y: m.y + mouth[1] - 12,
-          vx: m.face * (8 + 14 * h), vy: -14, life: 1.1, col: CREAM, k: 2 });
+        var mouth = m.mouths[m.frame] || m.mouths[0], s = okrzyk();
+        if (s) parts.push({ s: s, x: m.x + mouth[0] + m.face * 10, y: m.y + mouth[1] - 12,
+          vx: m.face * (8 + 14 * h), vy: -14, life: readTime(s), col: CREAM, k: 2 });
       }
       note -= dt;
       if (h > 0.33 && note <= 0) {
@@ -330,7 +367,7 @@
       parts.forEach(function (q) {
         if (q.fire || (q.life < 0.3 && (q.life * 20 | 0) % 2)) return;   // blink out
         if (q.s && h > 0.9 && q.y < 24) return;                            // keep the title clean
-        if (q.s) say(g, q.s, Math.round(q.x - textW(q.s, q.k) / 2), Math.round(q.y), q.col, q.k);
+        if (q.s) say(g, q.s, fit(q.x, textW(q.s, q.k), W), Math.round(q.y), q.col, q.k);
         else { g.fillStyle = rgb(q.col); g.fillRect(Math.round(q.x), Math.round(q.y), 2, 2); }
       });
       if (h > 0.7 && bf < 0.1) { g.fillStyle = rgb(RIM, 0.12); g.fillRect(-2, -2, W + 4, H + 4); }   // flash on the beat
@@ -340,7 +377,7 @@
       g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(3, 2, W - 6, 3);
       g.fillStyle = rgb(h > 0.9 && (t * 8 | 0) % 2 ? CREAM : RIM); g.fillRect(3, 2, Math.round((W - 6) * h), 3);
       if (h < 0.03 && t % 1.2 < 0.8) say(g, 'TAPUJ!', (W - textW('TAPUJ!', 2)) >> 1, 9, CREAM, 2);
-      if (h > 0.9) say(g, 'OGIEŃ!', (W - textW('OGIEŃ!', 3)) >> 1, 12, (t * 8 | 0) % 2 ? RIM : CREAM, 3);
+      if (h > 0.9) say(g, 'OGIE\u0143!', (W - textW('OGIE\u0143!', 3)) >> 1, 12, (t * 8 | 0) % 2 ? RIM : CREAM, 3);
     }
 
     function tap(x, y) {
@@ -358,6 +395,7 @@
   // The world scrolls in parallax (sky still · desert with flags · road · rocks in front); hype is speed.
   // A tap fires nitro on the car nearest the finger: flame frame, it surges ahead, then drops back.
   // Tiers: luz (cruising) · gaz (< .7, dust and speed lines) · nitro (> .9, everyone on nitro, shake).
+  // Drivers shout: the tapped car, and from gaz on, now and then on their own.
 
   function konwoj(art) {
     var M = art.meta.sobota, I = art.img, W = M.w, H = M.h;
@@ -368,7 +406,8 @@
       return { img: I['sobota-auto-' + i], x: c.x, y: c.y - (i === 1 ? 5 : 0), w: c.w, h: c.h, surge: 0, nitro: 0, bump: 0, ph: i * 1.7 };
     });
     var order = [1, 0, 2];
-    var parts = [], t = 0, dist = 0, speed = 0, auto = 0;
+    var shoutY = Math.min.apply(null, cars.map(function (c) { return c.y; })) - 12;   // one start line, so shouts stack
+    var parts = [], t = 0, dist = 0, speed = 0, auto = 0, spoke = -9;
 
     // a strip and its mirror image side by side tile seamlessly, whatever the picture
     function mirror(img) {
@@ -392,6 +431,7 @@
         auto = 0.35;
         cars[Math.random() * 3 | 0].nitro = 0.5;
       }
+      if (h > 0.33 && t - spoke > 1.8 - h) yell(cars[Math.random() * 3 | 0]);
       cars.forEach(function (c) {
         c.nitro = Math.max(0, c.nitro - dt);
         c.bump = Math.max(0, c.bump - dt);
@@ -414,6 +454,12 @@
       });
     }
 
+    function yell(c) {                              // above the car, drifting back with the wind
+      var s = okrzyk();
+      spoke = t;
+      if (s) parts.push({ s: s, x: c.x + c.surge + c.w / 2, y: shoutY, vx: -12, vy: -18, life: readTime(s) });
+    }
+
     function draw(g, h) {
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.globalCompositeOperation = 'source-over';
@@ -423,7 +469,7 @@
       scroll(g, road, M.road, dist);
 
       parts.forEach(function (q) {                    // dust behind the cars
-        if (q.line || q.spark) return;
+        if (q.line || q.spark || q.s) return;
         g.fillStyle = rgb(q.col, Math.min(0.85, q.life * 1.6).toFixed(2));
         g.fillRect(Math.round(q.x), Math.round(q.y), q.sz, q.sz);
       });
@@ -447,6 +493,9 @@
           if (q.life < 0.15 && (q.life * 40 | 0) % 2) return;
           g.fillStyle = rgb(q.col); g.fillRect(Math.round(q.x), Math.round(q.y), 2, 2);
         }
+        else if (q.s && !(q.life < 0.3 && (q.life * 20 | 0) % 2) && !(h > 0.9 && q.y < 24)) {   // blinks out, keeps the title clean
+          say(g, q.s, fit(q.x, textW(q.s, 2), W), Math.round(q.y), CREAM, 2, true);
+        }
       });
 
       g.setTransform(1, 0, 0, 1, 0, 0);
@@ -462,6 +511,7 @@
         return d < best.d ? { c: c, d: d } : best;
       }, { c: null, d: 1e9 }).c;
       near.nitro = 0.6;
+      if (t - spoke > 0.7) yell(near);
       for (var i = 0; i < 8; i++) {
         parts.push({ spark: true, x: x, y: y, vx: (Math.random() - 0.5) * 90, vy: -20 - Math.random() * 50, g: 160,
           life: 0.35 + Math.random() * 0.25, col: Math.random() < 0.5 ? RIM : CREAM });
